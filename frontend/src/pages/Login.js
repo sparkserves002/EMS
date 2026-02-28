@@ -41,7 +41,6 @@ export default function Login() {
       const role = isAdmin ? 'admin' : 'employee';
       
       // Store auth data
-      localStorage.setItem('authToken', 'mock-token-' + Date.now());
       localStorage.setItem('userEmail', trimmedEmail);
       localStorage.setItem('userRole', role);
       

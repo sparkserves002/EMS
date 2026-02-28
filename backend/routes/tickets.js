@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // Ticket categories
 const TICKET_CATEGORIES = ['salary', 'technical', 'hr', 'other'];
@@ -343,3 +343,5 @@ router.get('/stats', authJwt, async (req, res) => {
 });
 
 module.exports = router;
+
+

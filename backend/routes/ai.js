@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // Mock AI response for development (replace with OpenAI API in production)
 const mockAIResponse = async (task_type, prompt, tone) => {
@@ -234,3 +234,5 @@ ${query}
 });
 
 module.exports = router;
+
+

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // In-memory storage for mock mode
 let mockReviews = [
@@ -452,3 +452,5 @@ router.get('/ratings', authJwt, async (req, res) => {
 });
 
 module.exports = router;
+
+

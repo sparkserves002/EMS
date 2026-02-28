@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // Leave types and their default balances (per year)
 const LEAVE_TYPES = {
@@ -368,3 +368,5 @@ router.get('/stats', authJwt, async (req, res) => {
 });
 
 module.exports = router;
+
+

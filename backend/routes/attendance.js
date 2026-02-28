@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // In-memory storage for mock mode (when Firestore is not available)
 let mockAttendanceData = [];
 
 // Office location configuration (can be updated by admin)
 let officeLocation = {
-  latitude: 40.7128,  // Default: New York City (example)
-  longitude: -74.0060,
-  radius: 200,  // meters
+  latitude: 31.25423262127108,  // Default: New York City (example)
+  longitude: 75.69826230458278,
+  radius: 100,  // meters
   enabled: true,
   address: 'Office Location'
 };
@@ -385,3 +385,5 @@ router.get('/all', authJwt, async (req, res) => {
 });
 
 module.exports = router;
+
+

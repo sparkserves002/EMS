@@ -1,6 +1,6 @@
-const { getAdmin } = require('../firebaseAdmin');
+const jwt = require('jsonwebtoken');
 
-// Verifies Firebase ID token (sent as Bearer token)
+// Verifies JWT token (sent as Bearer token)
 module.exports = async function (req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -10,18 +10,17 @@ module.exports = async function (req, res, next) {
     }
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  const idToken = authHeader.split('Bearer ')[1];
-  const admin = getAdmin();
-  if (!admin || !admin.auth) {
-    if (process.env.NODE_ENV !== 'production') {
-      req.user = { uid: 'dev-uid', email: 'dev@example.com' };
-      return next();
-    }
-    return res.status(500).json({ error: 'Firebase admin not initialized' });
-  }
+
+  const token = authHeader.split('Bearer ')[1];
+  const jwtSecret = process.env.JWT_SECRET || 'ems-dev-secret';
+
   try {
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    req.user = { uid: decoded.uid, email: decoded.email };
+    const decoded = jwt.verify(token, jwtSecret);
+    req.user = {
+      uid: decoded.uid || decoded.id || decoded.userId || 'unknown',
+      email: decoded.email,
+      role: decoded.role
+    };
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid token' });

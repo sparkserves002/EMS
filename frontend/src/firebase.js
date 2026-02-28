@@ -1,57 +1,84 @@
-// Simple Firebase mock for development without Firebase configuration
-// This file provides mock authentication that works without any Firebase setup
+// Non-Firebase auth client stub (drop-in replacement)
+let currentUser = null;
+const listeners = new Set();
 
-let mockCurrentUser = null;
+const notifyAuthState = () => {
+  listeners.forEach((callback) => {
+    try {
+      callback(currentUser);
+    } catch (_) {
+      // ignore listener errors
+    }
+  });
+};
 
-// Mock auth object
-const mockAuth = {
-  currentUser: null,
-  onAuthStateChanged: (callback) => {
-    callback(mockCurrentUser);
-    return () => {};
+const auth = {
+  get currentUser() {
+    return currentUser;
   },
-};
-
-// Mock signInWithEmailAndPassword function
-const mockSignInWithEmailAndPassword = async (auth, email, password) => {
-  console.log('Mock login attempt with:', email, password);
-  if (email && password && email.length > 0 && password.length > 0) {
-    mockCurrentUser = {
-      uid: 'demo-user-123',
-      email: email,
-      displayName: email.split('@')[0],
-      metadata: {},
-      getIdToken: () => Promise.resolve('mock-token'),
-    };
-    mockAuth.currentUser = mockCurrentUser;
-    console.log('Mock login successful:', mockCurrentUser);
-    return { user: mockCurrentUser };
+  onAuthStateChanged(callback) {
+    listeners.add(callback);
+    callback(currentUser);
+    return () => listeners.delete(callback);
   }
-  throw new Error('Invalid email or password');
 };
 
-// Mock signOut function
-const mockSignOut = async () => {
-  mockCurrentUser = null;
-  mockAuth.currentUser = null;
+const createMockToken = (email) => {
+  const fallbackUid = email ? email.split('@')[0] : 'user';
+  return `mock-token-${fallbackUid}-${Date.now()}`;
 };
 
-// Mock onAuthStateChanged function
-const mockOnAuthStateChanged = (auth, callback) => {
-  callback(mockCurrentUser);
-  return () => {};
+const signInWithEmailAndPassword = async (_auth, email, password) => {
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  if (!normalizedEmail || !password) {
+    throw new Error('Invalid email or password');
+  }
+
+  const apiBase = process.env.REACT_APP_API_URL || '';
+  const response = await fetch(`${apiBase}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: normalizedEmail, password })
+  });
+
+  if (!response.ok) {
+    throw new Error('Invalid email or password');
+  }
+
+  const payload = await response.json();
+  const token = payload && payload.token ? payload.token : createMockToken(normalizedEmail);
+  const role = payload && payload.user && payload.user.role ? payload.user.role : 'employee';
+  const displayName = payload && payload.user && payload.user.displayName
+    ? payload.user.displayName
+    : (normalizedEmail.split('@')[0] || 'user');
+
+  localStorage.setItem('authToken', token);
+  localStorage.setItem('userEmail', normalizedEmail);
+  localStorage.setItem('userRole', role);
+
+  const uid = normalizedEmail.split('@')[0] || 'user';
+  currentUser = {
+    uid,
+    email: normalizedEmail,
+    displayName,
+    async getIdToken() {
+      return localStorage.getItem('authToken') || token;
+    }
+  };
+
+  notifyAuthState();
+  return { user: currentUser };
 };
 
-// Always use mock auth for this development setup
-const auth = mockAuth;
-const signInWithEmailAndPassword = mockSignInWithEmailAndPassword;
-const signOut = mockSignOut;
-const onAuthStateChanged = mockOnAuthStateChanged;
+const signOut = async () => {
+  currentUser = null;
+  notifyAuthState();
+};
+
+const onAuthStateChanged = (_auth, callback) => auth.onAuthStateChanged(callback);
+
 const db = null;
 const app = null;
 
-console.log('Using mock authentication for development');
-
-// Export all required Firebase auth functions
-export { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+export { auth, db, app, signInWithEmailAndPassword, signOut, onAuthStateChanged };
 export default app;

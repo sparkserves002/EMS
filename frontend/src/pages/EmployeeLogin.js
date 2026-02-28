@@ -22,7 +22,6 @@ export default function EmployeeLogin() {
       const systemType = 'employee';
       
       // Store auth data
-      localStorage.setItem('authToken', 'mock-token-' + Date.now());
       localStorage.setItem('userEmail', email);
       localStorage.setItem('userRole', role);
       localStorage.setItem('systemType', systemType);

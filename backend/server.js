@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const { initializeFirebaseAdmin, db } = require('./firebaseAdmin');
+const { connectDB } = require('./config/db');
+const { initializeMongoDbAdapter } = require('./dbProvider');
 const authRoutes = require('./routes/auth');
 const attendanceRoutes = require('./routes/attendance');
 const employeesRoutes = require('./routes/employees');
@@ -18,8 +20,6 @@ const notificationsRoutes = require('./routes/notifications');
 const expensesRoutes = require('./routes/expenses');
 const documentsRoutes = require('./routes/documents');
 const performanceRoutes = require('./routes/performance');
-
-initializeFirebaseAdmin();
 
 const app = express();
 app.use(cors());
@@ -53,4 +53,21 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
+async function startServer() {
+  try {
+    if (process.env.DB === 'mongodb') {
+      await connectDB();
+      initializeMongoDbAdapter();
+    }
+
+    app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+

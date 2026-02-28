@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJwt = require('../middleware/authJwt');
-const { getDb } = require('../firebaseAdmin');
+const { getDb } = require('../dbProvider');
 
 // In-memory storage for mock mode
 let mockAnnouncements = [
@@ -16,6 +16,7 @@ let mockAnnouncements = [
     createdAt: '2024-01-20T10:00:00Z',
     expiresAt: '2024-01-27T00:00:00Z',
     isActive: true,
+
   },
   {
     id: 'ann002',
@@ -111,7 +112,7 @@ router.post('/', authJwt, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Admin only.' });
     }
 
-    const { title, content, category, priority, expiresAt } = req.body;
+    const { title, content, category, priority, ecxpiresAt } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
@@ -233,3 +234,5 @@ router.get('/categories', authJwt, async (req, res) => {
 });
 
 module.exports = router;
+
+
