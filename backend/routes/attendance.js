@@ -8,7 +8,7 @@ let mockAttendanceData = [];
 
 // Office location configuration (can be updated by admin)
 let officeLocation = {
-  latitude: 31.25423262127108,  // Default: New York City (example)
+  latitude: 31.25423262127108, 
   longitude: 75.69826230458278,
   radius: 100,  // meters
   enabled: true,
@@ -133,7 +133,7 @@ router.post('/checkin', authJwt, async (req, res) => {
     const db = getDb();
     
     if (db) {
-      // Use Firestore if available
+      
       const attendanceRef = db.collection('Attendance').doc(`${uid}_${today}`);
       const doc = await attendanceRef.get();
       if (doc.exists) {

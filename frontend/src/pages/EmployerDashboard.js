@@ -34,11 +34,12 @@ export default function EmployerDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [empRes, attRes, leavesRes, ticketsRes] = await Promise.all([
+      const [empRes, attRes, leavesRes, ticketsRes, loginRes] = await Promise.all([
         apiCall('/api/employees'),
         apiCall('/api/attendance/today'),
         apiCall('/api/leaves/all?status=pending'),
         apiCall('/api/tickets/stats'),
+        apiCall('/api/auth/recent-employee-logins'),
       ]);
 
       setStats({
@@ -47,6 +48,7 @@ export default function EmployerDashboard() {
         leaves: leavesRes.leaves || [],
         tickets: ticketsRes.stats || {},
       });
+      setRecentEmployees(loginRes.logins || []);
       setRecentLeaves(leavesRes.leaves?.slice(0, 5) || []);
     } catch (err) {
       console.error('Error loading dashboard:', err);
@@ -70,7 +72,36 @@ export default function EmployerDashboard() {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (!dateStr) {
+      return '-';
+    }
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatDateTimeIST = (dateStr) => {
+    if (!dateStr) {
+      return '-';
+    }
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+    return date.toLocaleString('en-IN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+      timeZoneName: 'short',
+    });
   };
 
   const statCards = [
@@ -174,6 +205,36 @@ export default function EmployerDashboard() {
           </div>
         ) : (
           <p style={{ color: '#666' }}>No pending approvals</p>
+        )}
+      </div>
+
+      <div style={styles.section}>
+        <h3>Recent Employee Logins</h3>
+        {loading ? (
+          <p>Loading...</p>
+        ) : recentEmployees.length > 0 ? (
+          <div style={styles.tableCard}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Employee</th>
+                  <th style={styles.th}>Email</th>
+                  <th style={styles.th}>Last Login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentEmployees.map((employee) => (
+                  <tr key={employee.email || employee.uid} style={styles.tr}>
+                    <td style={styles.td}>{employee.displayName || employee.uid || 'Employee'}</td>
+                    <td style={styles.td}>{employee.email || '-'}</td>
+                    <td style={styles.td}>{formatDateTimeIST(employee.loggedInAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p style={{ color: '#666' }}>No employee login activity yet</p>
         )}
       </div>
     </div>
